@@ -118,6 +118,11 @@ argument_specs:
         default: "$EASYRSA/openssl-easyrsa.cnf"
       # }}}
       # Certificates {{{
+      easyrsa_ca_pass:
+        type: str
+        required: false
+        description: "A passphrase to encrypt the private key."
+        default: ""
       easyrsa_servers:
         type: list
         required: false

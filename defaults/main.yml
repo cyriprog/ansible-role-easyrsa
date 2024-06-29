@@ -30,6 +30,7 @@ easyrsa_conf_ns_comment: "Easy-RSA Generated Certificate"
 easyrsa_conf_temp_file: "$EASYRSA_TEMP_DIR/extensions.temp"
 easyrsa_conf_ext_dir: "$EASYRSA/x509-types"
 easyrsa_conf_ssl_conf: "$EASYRSA/openssl-easyrsa.cnf"
+easyrsa_ca_pass: ""
 easyrsa_servers: []
 easyrsa_clients: []
 easyrsa_renew: []
