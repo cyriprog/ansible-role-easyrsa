@@ -1,17 +1,21 @@
 ---
+- name: Update cert pass file
+  include_tasks: compute_certpass.yml
 
 - name: Sign server certificates
-  command: easyrsa sign-req server "{{ _easyrsa__server.name }}"
-  args:
-    creates: "{{ easyrsa_pki_dir }}/issued/{{ _easyrsa__server.name }}.crt"
+  include_tasks: sign_cert.yml
+  vars:
+    _easyrsa_sign_mode: server
   loop: "{{ easyrsa_servers }}"
   loop_control:
-    loop_var: _easyrsa__server
+    loop_var: _easyrsa__sign_cert
+    label: "Server {{_easyrsa__sign_cert.name}}"
 
 - name: Sign client certificates
-  command: easyrsa sign-req client "{{ _easyrsa__client.name }}"
-  args:
-    creates: "{{ easyrsa_pki_dir }}/issued/{{ _easyrsa__client.name }}.crt"
+  include_tasks: sign_cert.yml
+  vars:
+    _easyrsa_sign_mode: client
   loop: "{{ easyrsa_clients }}"
   loop_control:
-    loop_var: _easyrsa__client
+    loop_var: _easyrsa__sign_cert
+    label: "Server {{_easyrsa__sign_cert.name}}"

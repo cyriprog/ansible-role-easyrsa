@@ -1,0 +1,12 @@
+---
+- name: Update cert password
+  include_tasks: compute_certpass.yml
+
+- name: Bundle certificates and keys into PKCS#12
+  command: >-
+    easyrsa 
+      --passin=file:{{ _easyrsa__cert_pass }}
+      --passout=file:{{ _easyrsa__cert_pass }}
+      export-p12 {{ _easyrsa__cert.name }}
+  args:
+    creates: "{{ easyrsa_pki_dir }}/private/{{ _easyrsa__cert.name }}.p12"

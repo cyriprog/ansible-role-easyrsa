@@ -1,0 +1,21 @@
+---
+- name: Update cert password
+  include_tasks: compute_certpass.yml
+
+- name: Generate CSRs
+  command: >-
+      easyrsa
+        {{ '"--passin=file:' + (_easyrsa_tmpfile_capass | quote) + '"'
+                                  if   _easyrsa_capass_defined
+                                  else ''}}
+        {{ '"--passout=file:' + (_easyrsa_tmpfile_certpass | quote) + '"'
+                                  if _easyrsa__cert_pass_defined
+                                  else ''
+        }}
+        gen-req
+        {{ _easyrsa__cert.name }}
+        {{ '' if _easyrsa__cert_pass_defined else 'nopass' }}
+  args:
+    creates: "{{ easyrsa_pki_dir }}/issued/{{ _easyrsa__cert.name }}.crt"
+  environment:
+    EASYRSA_REQ_CN: "{{ _easyrsa__cert.cn | d(_easyrsa__cert.name, true) }}"

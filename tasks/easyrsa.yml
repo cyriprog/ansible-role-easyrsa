@@ -1,27 +1,80 @@
 ---
-
-- include_tasks: install.yml  # noqa name[missing]
-
-- include_tasks: configure.yml  # noqa name[missing]
-
-- include_tasks: csr.yml  # noqa name[missing]
-
-- include_tasks: sign.yml  # noqa name[missing]
-
-- include_tasks: renew.yml  # noqa name[missing]
-
-- include_tasks: revoke.yml  # noqa name[missing]
-
-- include_tasks: convert.yml  # noqa name[missing]
-
-- include_tasks: dh.yml  # noqa name[missing]
-  when: easyrsa_generate_dh | bool
-
-- include_tasks: download.yml  # noqa name[missing]
-  when:
-    - easyrsa_download | length
-      or easyrsa_download_pki | bool
-
-- name: Register the role as run
+- name: Define Easyrsa tmpfile vars
   set_fact:
-    easyrsa_role_run: true
+    _easyrsa_tmpfile_capass: ""
+    _easyrsa_capass_defined: "{{easyrsa_ca_pass | length > 0}}"
+    _easyrsa_tmpfile_certpass: ""
+
+- name: Block for delete temporary file ca pass if necessary after use
+  block:
+  - name: Block to create temporary file for ca pass if nessessary
+    block:
+    - name: Create temporary file for CA passin
+      tempfile:
+        path: "{{easyrsa_conf_temp_dir}}"
+        state: file
+      register: _easyrsa_tmpfile_capass
+
+    - set_fact:
+        _easyrsa_tmpfile_capass: "{{_easyrsa_tmpfile_capass.path}}"
+
+    - copy:
+        content: |
+          {{easyrsa_ca_pass}}
+          {{easyrsa_ca_pass}}
+        dest: "{{_easyrsa_tmpfile_capass}}"
+
+    when: _easyrsa_capass_defined
+
+  - name: Block to create temporary file for cert pass. Will ne used if nessessary
+    block:
+    - name: Create temporary file for cert pass
+      tempfile:
+        path: "{{easyrsa_conf_temp_dir}}"
+        state: file
+      register: _easyrsa_tmpfile_certpass
+
+    - set_fact:
+        _easyrsa_tmpfile_certpass: "{{_easyrsa_tmpfile_certpass.path}}"
+
+  - include_tasks: install.yml  # noqa name[missing]
+
+  - include_tasks: configure.yml  # noqa name[missing]
+
+  - include_tasks: csr.yml  # noqa name[missing]
+
+  - include_tasks: sign.yml  # noqa name[missing]
+
+  - include_tasks: renew.yml  # noqa name[missing]
+
+  - include_tasks: revoke.yml  # noqa name[missing]
+
+  - include_tasks: convert.yml  # noqa name[missing]
+
+  always:
+  - name: Remove temporary file for ca pass
+    file:
+      path: "{{_easyrsa_tmpfile_capass}}"
+      state: absent
+    when:
+      - _easyrsa_capass_defined
+      - _easyrsa_tmpfile_capass | length > 0
+
+  - name: Remove temporary file for cert pass
+    file:
+      path: "{{_easyrsa_tmpfile_certpass}}"
+      state: absent
+    when:
+      - _easyrsa_tmpfile_certpass | length > 0
+
+# - include_tasks: dh.yml  # noqa name[missing]
+#   when: easyrsa_generate_dh | bool
+
+# - include_tasks: download.yml  # noqa name[missing]
+#   when:
+#     - easyrsa_download | length
+#       or easyrsa_download_pki | bool
+
+# - name: Register the role as run
+#   set_fact:
+#     easyrsa_role_run: true

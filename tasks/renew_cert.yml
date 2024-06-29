@@ -1,0 +1,37 @@
+---
+- name: Update cert pass file
+  include_tasks: compute_certpass.yml
+
+- name: Renew certificates
+  command: >-
+    easyrsa
+        {{ '"--passin=file:' + (_easyrsa_tmpfile_capass | quote) + '"'
+                                  if   _easyrsa_capass_defined
+                                  else ''}}
+        {{ '"--passout=file:' + (_easyrsa_tmpfile_certpass | quote) + '"'
+                                  if _easyrsa__cert_pass_defined
+                                  else ''
+        }}
+      renew
+      {{ _easyrsa__cert.name }}
+      {{ 'nopass' if not _easyrsa__cert_pass_defined else '' }}
+  args:
+    creates: "{{ easyrsa_pki_dir }}/renewed/issued/{{ _easyrsa__cert.name }}.crt"
+  environment:
+    EASYRSA_REQ_CN: "{{ _easyrsa__cert.cn | d(_easyrsa__cert.name, true) }}"
+  register: _result
+  changed_when: _result is not failed
+
+- name: Revoke renewed certificates
+  command: >-
+    easyrsa revoke-renewed "{{ _easyrsa__cert.name }}" "{{ _easyrsa__cert.reason | d('') }}"
+  args:
+    removes: "{{ easyrsa_pki_dir }}/renewed/issued/{{ _easyrsa__cert.name }}.crt"
+  register: _register_easyrsa_crl_regeneration_needed_due_to_revoke_renewed
+  notify: easyrsa-regen-crl
+
+- set_fact:
+    _easyrsa_crl_regeneration_needed_due_to_revoke_renewed: "{{
+                     _easyrsa_crl_regeneration_needed_due_to_revoke_renewed
+        or  _register_easyrsa_crl_regeneration_needed_due_to_revoke_renewed.changed
+    }}"

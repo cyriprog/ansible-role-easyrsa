@@ -18,7 +18,15 @@
     mode: 0o755
 
 - name: Create CA
-  command: easyrsa build-ca nopass
+  command: >-
+      easyrsa {{ '"--passin=file:' + (_easyrsa_tmpfile_capass | quote) + '"'
+                                if   _easyrsa_capass_defined
+                                else ''}}
+              {{ '"--passout=file:' + (_easyrsa_tmpfile_capass | quote) + '"'
+                                if   _easyrsa_capass_defined
+                                else ''}}
+              build-ca
+              {{ '' if _easyrsa_capass_defined else 'nopass' }}
   register: _result
   failed_when:
     - _result is failed

@@ -1,0 +1,17 @@
+---
+- set_fact:
+    _easyrsa__cert_pass: ""
+    _easyrsa__cert_pass_defined: false
+
+- block:
+  - set_fact:
+      _easyrsa__cert_pass: "{{_easyrsa__cert.pass}}"
+      _easyrsa__cert_pass_defined: true
+
+  - name: Init content of temporary file for cert pass if nessessary
+    copy:
+      content: "{{_easyrsa__cert_pass}}\n{{_easyrsa__cert_pass}}"
+      dest: "{{_easyrsa_tmpfile_certpass}}"
+  when:
+  - _easyrsa__cert.pass is defined
+  - _easyrsa__cert.pass | length > 0

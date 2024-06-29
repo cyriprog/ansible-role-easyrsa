@@ -1,50 +1,50 @@
 ---
 
-- name: Install dependencies (Debian)
-  apt:
-    name: "{{ packages }}"
-    update_cache: true
-  become: true
-  when: ansible_os_family == 'Debian'
-  vars:
-    packages:
-      - openssl
-      - git
+# - name: Install dependencies (Debian)
+#   apt:
+#     name: "{{ packages }}"
+#     update_cache: true
+#   become: true
+#   when: ansible_os_family == 'Debian'
+#   vars:
+#     packages:
+#       - openssl
+#       - git
 
-- name: Install dependencies (Arch Linux)
-  community.general.pacman:
-    name: "{{ packages }}"
-    update_cache: true
-  become: true
-  when: ansible_os_family == 'Archlinux'
-  vars:
-    packages:
-      - openssl
-      - git
+# - name: Install dependencies (Arch Linux)
+#   community.general.pacman:
+#     name: "{{ packages }}"
+#     update_cache: true
+#   become: true
+#   when: ansible_os_family == 'Archlinux'
+#   vars:
+#     packages:
+#       - openssl
+#       - git
 
-- name: Download easy-rsa
-  git:
-    repo: "{{ easyrsa_repo }}"
-    dest: /tmp/easy-rsa/
-    version: "{{ easyrsa_version }}"
+# - name: Download easy-rsa
+#   git:
+#     repo: "{{ easyrsa_repo }}"
+#     dest: /tmp/easy-rsa/
+#     version: "{{ easyrsa_version }}"
 
-- name: Install library files
-  copy:
-    src: /tmp/easy-rsa/easyrsa3/
-    dest: /usr/local/lib/easyrsa
-    remote_src: true
-    mode: 0o755
-    owner: root
-    group: root
-  become: true
+# - name: Install library files
+#   copy:
+#     src: /tmp/easy-rsa/easyrsa3/
+#     dest: /usr/local/lib/easyrsa
+#     remote_src: true
+#     mode: 0o755
+#     owner: root
+#     group: root
+#   become: true
 
-- name: Set permissions
-  file:
-    path: /usr/local/lib/easyrsa/
-    state: directory
-    recurse: true
-    mode: o+rX
-  become: true
+# - name: Set permissions
+#   file:
+#     path: /usr/local/lib/easyrsa/
+#     state: directory
+#     recurse: true
+#     mode: o+rX
+#   become: true
 
 - name: Install binary
   copy:

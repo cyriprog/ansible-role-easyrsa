@@ -1,0 +1,21 @@
+---
+- name: Update cert pass file
+  include_tasks: compute_certpass.yml
+  vars:
+    _easyrsa__cert: "{{_easyrsa__sign_cert}}"
+
+- name: Sign certificates
+  command: >-
+    easyrsa
+        {{ '"--passin=file:' + (_easyrsa_tmpfile_capass | quote) + '"'
+                                  if   _easyrsa_capass_defined
+                                  else ''}}
+        {{ '"--passout=file:' + (_easyrsa_tmpfile_certpass | quote) + '"'
+                                  if _easyrsa__cert_pass_defined
+                                  else ''
+        }}
+        sign-req
+        "{{_easyrsa_sign_mode}}" "{{ _easyrsa__sign_cert.name }}"
+        {{ '' if _easyrsa__cert_pass_defined else 'nopass' }}
+  args:
+    creates: "{{ easyrsa_pki_dir }}/issued/{{ _easyrsa__sign_cert.name }}.crt"
